@@ -1,6 +1,5 @@
 package layout
 
-import scene.SceneViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,11 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposeImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import io.ygdrasil.wgpu.*
-import org.jetbrains.skia.*
 import org.koin.compose.koinInject
+import scene.SceneViewModel
 import scene.TextureBuffer
 
 
@@ -40,21 +39,8 @@ fun CurrentScene(
             color = MaterialTheme.colorScheme.secondary
         )
 
-        val info = ImageInfo(
-            texture.width,
-            texture.height,
-            ColorType.BGRA_8888,
-            ColorAlphaType.PREMUL,
-            ColorSpace.sRGB
-        )
-
-        println("color ${sceneViewModel.color.value}")
-
-        val image = Image.makeRaster(
-            info, textureBuffer.bufferArray, info.width * 4
-        )
-
-        val testImage = Bitmap.makeFromImage(image).asComposeImageBitmap()
+        val testImage  = textureBuffer
+            .bufferArray.toImageBitmap(texture.width, texture.height)
 
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -70,3 +56,5 @@ fun CurrentScene(
         }
     }
 }
+
+expect internal fun ByteArray.toImageBitmap(width: Int, height: Int): ImageBitmap

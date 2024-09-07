@@ -145,7 +145,7 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
                     storeOp = StoreOp.store,
                 )
             ),
-            depthStencilAttachment = RenderPassDescriptor.RenderPassDepthStencilAttachment(
+            depthStencilAttachment = RenderPassDescriptor.DepthStencilAttachment(
                 view = depthTexture.createView(),
                 depthClearValue = 1.0f,
                 depthLoadOp = LoadOp.clear,
@@ -186,13 +186,13 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         val encoder = device.createCommandEncoder()
             .bind()
 
-        val renderPassEncoder = encoder.beginRenderPass(renderPassDescriptor)
-            .bind()
-        renderPassEncoder.setPipeline(renderPipeline)
-        renderPassEncoder.setBindGroup(0, uniformBindGroup)
-        renderPassEncoder.setVertexBuffer(0, verticesBuffer)
-        renderPassEncoder.draw(cubeVertexCount)
-        renderPassEncoder.end()
+        encoder.beginRenderPass(renderPassDescriptor) {
+            setPipeline(renderPipeline)
+            setBindGroup(0, uniformBindGroup)
+            setVertexBuffer(0, verticesBuffer)
+            draw(cubeVertexCount)
+            end()
+        }
 
         val commandBuffer = encoder.finish()
             .bind()

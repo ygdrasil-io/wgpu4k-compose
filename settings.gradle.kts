@@ -25,15 +25,10 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
         // WGPU4K repository
         maven {
             url = uri("https://gitlab.com/api/v4/projects/25805863/packages/maven")
-        }
-
-        // Use by rococoa
-        maven {
-            url = uri("http://repo.maven.cyberduck.io.s3.amazonaws.com/releases")
-            isAllowInsecureProtocol = true
         }
     }
 }
