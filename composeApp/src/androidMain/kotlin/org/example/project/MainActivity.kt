@@ -15,8 +15,9 @@ class MainActivity : ComponentActivity() {
 
         runBlocking {
 
-        setContent {
-            App()
+            setContent {
+                App()
+            }
         }
     }
 }
