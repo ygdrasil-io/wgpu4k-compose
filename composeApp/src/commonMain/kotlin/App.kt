@@ -2,8 +2,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import io.ygdrasil.wgpu.TextureRenderingContext
-import io.ygdrasil.wgpu.WGPUContext
+import io.ygdrasil.webgpu.TextureRenderingContext
+import io.ygdrasil.webgpu.WGPUContext
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch

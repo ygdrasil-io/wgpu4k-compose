@@ -2,7 +2,7 @@ package scene
 
 import RotatingCubeScene
 import androidx.compose.runtime.mutableStateOf
-import io.ygdrasil.wgpu.*
+import io.ygdrasil.webgpu.*
 
 
 class SceneViewModel(
@@ -31,16 +31,16 @@ class SceneViewModel(
             commandEncoder.copyTextureToBuffer(
                 ImageCopyTexture(
                     texture = renderingContext.getCurrentTexture(),
-                    mipLevel = 0,
+                    mipLevel = 0u,
                     origin = Origin3D.Zero,
-                    aspect = TextureAspect.all,
+                    aspect = TextureAspect.All,
                 ),
                 ImageCopyBuffer(
                     buffer = textureBuffer.buffer,
-                    offset = 0,
+                    offset = 0u,
                     // This needs to be a multiple of 256. Normally we would need to pad
                     // it but we here know it will work out anyways.
-                    bytesPerRow = renderingContext.width * 4,
+                    bytesPerRow = renderingContext.width * 4u,
                     rowsPerImage = renderingContext.height,
                 ),
                 Size3D(
@@ -50,10 +50,10 @@ class SceneViewModel(
             )
 
             wgpu.device.queue.submit(listOf(commandEncoder.finish()))
-            textureBuffer.buffer.map(setOf(MapMode.read))
+            textureBuffer.buffer.map(setOf(MapMode.Read))
             // Complete async work
             wgpu.device.poll()
-            textureBuffer.buffer.mapInto(buffer = textureBuffer.bufferArray, offset = 0)
+            textureBuffer.buffer.mapInto(buffer = textureBuffer.bufferArray, offset = 0u)
         }
     }
 

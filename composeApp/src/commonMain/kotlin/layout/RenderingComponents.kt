@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import io.ygdrasil.wgpu.*
+import io.ygdrasil.webgpu.*
 import org.koin.compose.koinInject
 import scene.SceneViewModel
 import scene.TextureBuffer
@@ -57,4 +57,4 @@ fun CurrentScene(
     }
 }
 
-expect internal fun ByteArray.toImageBitmap(width: Int, height: Int): ImageBitmap
+expect internal fun ByteArray.toImageBitmap(width: GPUIntegerCoordinateOut, height: GPUIntegerCoordinateOut): ImageBitmap

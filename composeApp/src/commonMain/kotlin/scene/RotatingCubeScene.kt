@@ -3,7 +3,7 @@ import Cube.cubeUVOffset
 import Cube.cubeVertexArray
 import Cube.cubeVertexCount
 import Cube.cubeVertexSize
-import io.ygdrasil.wgpu.*
+import io.ygdrasil.webgpu.*
 import korlibs.math.geom.Angle
 import korlibs.math.geom.Matrix4
 import kotlin.math.PI
@@ -32,9 +32,9 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         val dummyTexture by lazy {
             device.createTexture(
                 TextureDescriptor(
-                    size = Size3D(1, 1),
-                    format = TextureFormat.depth24plus,
-                    usage = setOf(TextureUsage.renderattachment),
+                    size = Size3D(1u, 1u),
+                    format = TextureFormat.Depth24Plus,
+                    usage = setOf(TextureUsage.RenderAttachment),
                 )
             ).also { with(autoClosableContext) { it.bind() } }
         }
@@ -42,8 +42,8 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         // Create a vertex buffer from the cube data.
         verticesBuffer = device.createBuffer(
             BufferDescriptor(
-                size = (cubeVertexArray.size * Float.SIZE_BYTES).toLong(),
-                usage = setOf(BufferUsage.vertex),
+                size = (cubeVertexArray.size * Float.SIZE_BYTES).toULong(),
+                usage = setOf(BufferUsage.Vertex),
                 mappedAtCreation = true
             )
         ).bind()
@@ -65,14 +65,14 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
                             arrayStride = cubeVertexSize,
                             attributes = listOf(
                                 RenderPipelineDescriptor.VertexState.VertexBufferLayout.VertexAttribute(
-                                    shaderLocation = 0,
+                                    shaderLocation = 0u,
                                     offset = cubePositionOffset,
-                                    format = VertexFormat.float32x4
+                                    format = VertexFormat.Float32x4
                                 ),
                                 RenderPipelineDescriptor.VertexState.VertexBufferLayout.VertexAttribute(
-                                    shaderLocation = 1,
+                                    shaderLocation = 1u,
                                     offset = cubeUVOffset,
-                                    format = VertexFormat.float32x2
+                                    format = VertexFormat.Float32x2
                                 )
                             )
                         )
@@ -91,16 +91,16 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
                     )
                 ),
                 primitive = RenderPipelineDescriptor.PrimitiveState(
-                    topology = PrimitiveTopology.trianglelist,
-                    cullMode = CullMode.back
+                    topology = PrimitiveTopology.TriangleList,
+                    cullMode = CullMode.Back
                 ),
                 depthStencil = RenderPipelineDescriptor.DepthStencilState(
                     depthWriteEnabled = true,
-                    depthCompare = CompareFunction.less,
-                    format = TextureFormat.depth24plus
+                    depthCompare = CompareFunction.Less,
+                    format = TextureFormat.Depth24Plus
                 ),
                 multisample = RenderPipelineDescriptor.MultisampleState(
-                    count = 1,
+                    count = 1u,
                     mask = 0xFFFFFFFu
                 )
             )
@@ -109,25 +109,25 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         val depthTexture = device.createTexture(
             TextureDescriptor(
                 size = Size3D(renderingContext.width, renderingContext.height),
-                format = TextureFormat.depth24plus,
-                usage = setOf(TextureUsage.renderattachment),
+                format = TextureFormat.Depth24Plus,
+                usage = setOf(TextureUsage.RenderAttachment),
             )
         ).bind()
 
-        val uniformBufferSize = 4L * 16L; // 4x4 matrix
+        val uniformBufferSize = 4uL * 16uL // 4x4 matrix
         uniformBuffer = device.createBuffer(
             BufferDescriptor(
                 size = uniformBufferSize,
-                usage = setOf(BufferUsage.uniform, BufferUsage.copydst)
+                usage = setOf(BufferUsage.Uniform, BufferUsage.CopyDst)
             )
         ).bind()
 
         uniformBindGroup = device.createBindGroup(
             BindGroupDescriptor(
-                layout = renderPipeline.getBindGroupLayout(0),
+                layout = renderPipeline.getBindGroupLayout(0u),
                 entries = listOf(
                     BindGroupDescriptor.BindGroupEntry(
-                        binding = 0,
+                        binding = 0u,
                         resource = BindGroupDescriptor.BufferBinding(
                             buffer = uniformBuffer
                         )
@@ -140,21 +140,21 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
             colorAttachments = listOf(
                 RenderPassDescriptor.ColorAttachment(
                     view = dummyTexture.createView().bind(), // Assigned later
-                    loadOp = LoadOp.clear,
+                    loadOp = LoadOp.Clear,
                     clearValue = Color(0.5, 0.5, 0.5, 1.0),
-                    storeOp = StoreOp.store,
+                    storeOp = StoreOp.Store,
                 )
             ),
             depthStencilAttachment = RenderPassDescriptor.DepthStencilAttachment(
                 view = depthTexture.createView(),
                 depthClearValue = 1.0f,
-                depthLoadOp = LoadOp.clear,
-                depthStoreOp = StoreOp.store
+                depthLoadOp = LoadOp.Clear,
+                depthStoreOp = StoreOp.Store
             )
         )
 
 
-        val aspect = renderingContext.width / renderingContext.height.toDouble()
+        val aspect = renderingContext.width.toInt() / renderingContext.height.toDouble()
         val fox = Angle.fromRadians((2 * PI) / 5)
         projectionMatrix = Matrix4.perspective(fox, aspect, 1.0, 100.0)
     }
@@ -167,10 +167,10 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         )
         device.queue.writeBuffer(
             uniformBuffer,
-            0,
+            0u,
             transformationMatrix,
-            0,
-            transformationMatrix.size.toLong()
+            0u,
+            transformationMatrix.size.toULong()
         )
 
         renderPassDescriptor = renderPassDescriptor.copy(
@@ -188,8 +188,8 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
 
         encoder.beginRenderPass(renderPassDescriptor) {
             setPipeline(renderPipeline)
-            setBindGroup(0, uniformBindGroup)
-            setVertexBuffer(0, verticesBuffer)
+            setBindGroup(0u, uniformBindGroup)
+            setVertexBuffer(0u, verticesBuffer)
             draw(cubeVertexCount)
             end()
         }
