@@ -5,14 +5,12 @@ import androidx.compose.ui.graphics.Color
 import io.ygdrasil.webgpu.TextureRenderingContext
 import io.ygdrasil.webgpu.WGPUContext
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import layout.Main
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinApplication
 import org.koin.dsl.module
 import scene.SceneViewModel
-import scene.TextureBuffer
 
 @Composable
 @Preview
@@ -23,9 +21,8 @@ fun App(wgpu: WGPUContext? = null) {
         modules(
             module {
                 single { wgpu }
-                single { TextureBuffer(wgpu, get()) }
                 single { (wgpu.renderingContext as? TextureRenderingContext) ?: error("expected texture rendering context") }
-                single { SceneViewModel(wgpu, get(), get()).apply { MainScope().launch { initScene() } } }
+                single { SceneViewModel(wgpu, get()).apply { MainScope().launch { initScene() } } }
             }
         )
     }) {

@@ -15,7 +15,7 @@ internal actual fun ByteArray.toImageBitmap(width: GPUIntegerCoordinateOut, heig
     val info = ImageInfo(
         width.toInt(),
         height.toInt(),
-        ColorType.BGRA_8888,
+        ColorType.RGBA_8888,
         ColorAlphaType.PREMUL,
         ColorSpace.sRGB
     )

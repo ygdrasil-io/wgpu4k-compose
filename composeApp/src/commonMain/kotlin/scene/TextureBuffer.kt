@@ -7,7 +7,7 @@ class TextureBuffer(wgpu: WGPUContext, renderingContext: TextureRenderingContext
     val buffer = wgpu.device.createBuffer(BufferDescriptor(
         label = "Compose texture buffer",
         size = (renderingContext.width * renderingContext.height * renderingContext.textureFormat.getBytesPerPixel()).toULong(),
-        usage = setOf(BufferUsage.CopyDst, BufferUsage.MapRead),
+        usage = setOf(GPUBufferUsage.CopyDst, GPUBufferUsage.MapRead),
         mappedAtCreation = false,
     ))
 

@@ -1,5 +1,4 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
@@ -9,14 +8,6 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
 }
-
-/*configurations.all {
-    resolutionStrategy {
-        cacheDynamicVersionsFor(0, "seconds")
-        cacheChangingModulesFor(0, "seconds")
-    }
-}*/
-
 
 enum class Os {
     Linux,
@@ -69,6 +60,11 @@ kotlin {
             }
         }
         binaries.executable()
+        compilerOptions {
+            // Enable only when need tp debug, this required special activation on browser
+            // Use chrome://flags/#enable-experimental-webassembly-features on chrome
+            freeCompilerArgs.add("-Xwasm-use-new-exception-proposal")
+        }
     }
     
     androidTarget {
@@ -120,7 +116,7 @@ kotlin {
 
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0-RC")
+            implementation(libs.kotlinx.coroutines.swing)
 
         }
     }

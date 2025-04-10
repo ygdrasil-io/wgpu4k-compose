@@ -13,28 +13,27 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
     var frame = 0
     protected val autoClosableContext = AutoClosableContext()
 
-    internal val device: Device
+    internal val device: GPUDevice
         get() = context.device
 
     internal val renderingContext: RenderingContext
         get() = context.renderingContext
 
-    lateinit var renderPipeline: RenderPipeline
+    lateinit var renderPipeline: GPURenderPipeline
     lateinit var projectionMatrix: Matrix4
     lateinit var renderPassDescriptor: RenderPassDescriptor
-    lateinit var uniformBuffer: Buffer
-    lateinit var uniformBindGroup: BindGroup
-    lateinit var verticesBuffer: Buffer
+    lateinit var uniformBuffer: GPUBuffer
+    lateinit var uniformBindGroup: GPUBindGroup
+    lateinit var verticesBuffer: GPUBuffer
 
     fun initialize() = with(autoClosableContext) {
-
         // Create dummy texture, as we manipulate immutable data and we need to assign a texture early
         val dummyTexture by lazy {
             device.createTexture(
                 TextureDescriptor(
-                    size = Size3D(1u, 1u),
-                    format = TextureFormat.Depth24Plus,
-                    usage = setOf(TextureUsage.RenderAttachment),
+                    size = Extent3D(1u, 1u),
+                    format = GPUTextureFormat.Depth24Plus,
+                    usage = setOf(GPUTextureUsage.RenderAttachment),
                 )
             ).also { with(autoClosableContext) { it.bind() } }
         }
@@ -43,7 +42,7 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         verticesBuffer = device.createBuffer(
             BufferDescriptor(
                 size = (cubeVertexArray.size * Float.SIZE_BYTES).toULong(),
-                usage = setOf(BufferUsage.Vertex),
+                usage = setOf(GPUBufferUsage.Vertex),
                 mappedAtCreation = true
             )
         ).bind()
@@ -54,52 +53,54 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
 
         renderPipeline = device.createRenderPipeline(
             RenderPipelineDescriptor(
-                vertex = RenderPipelineDescriptor.VertexState(
+                vertex = VertexState(
                     module = device.createShaderModule(
                         ShaderModuleDescriptor(
                             code = basicVertexShader
-                        )
+                        ),
                     ).bind(), // bind to autoClosableContext to release it later
+                    entryPoint = "main",
                     buffers = listOf(
-                        RenderPipelineDescriptor.VertexState.VertexBufferLayout(
+                        VertexBufferLayout(
                             arrayStride = cubeVertexSize,
                             attributes = listOf(
-                                RenderPipelineDescriptor.VertexState.VertexBufferLayout.VertexAttribute(
+                                VertexAttribute(
                                     shaderLocation = 0u,
                                     offset = cubePositionOffset,
-                                    format = VertexFormat.Float32x4
+                                    format = GPUVertexFormat.Float32x4
                                 ),
-                                RenderPipelineDescriptor.VertexState.VertexBufferLayout.VertexAttribute(
+                                VertexAttribute(
                                     shaderLocation = 1u,
                                     offset = cubeUVOffset,
-                                    format = VertexFormat.Float32x2
+                                    format = GPUVertexFormat.Float32x2
                                 )
                             )
                         )
                     )
                 ),
-                fragment = RenderPipelineDescriptor.FragmentState(
+                fragment = FragmentState(
                     module = device.createShaderModule(
                         ShaderModuleDescriptor(
                             code = vertexPositionColorShader
                         )
                     ).bind(), // bind to autoClosableContext to release it later
+                    entryPoint = "main",
                     targets = listOf(
-                        RenderPipelineDescriptor.FragmentState.ColorTargetState(
+                        ColorTargetState(
                             format = renderingContext.textureFormat
                         )
                     )
                 ),
-                primitive = RenderPipelineDescriptor.PrimitiveState(
-                    topology = PrimitiveTopology.TriangleList,
-                    cullMode = CullMode.Back
+                primitive = PrimitiveState(
+                    topology = GPUPrimitiveTopology.TriangleList,
+                    cullMode = GPUCullMode.Back
                 ),
-                depthStencil = RenderPipelineDescriptor.DepthStencilState(
+                depthStencil = DepthStencilState(
                     depthWriteEnabled = true,
-                    depthCompare = CompareFunction.Less,
-                    format = TextureFormat.Depth24Plus
+                    depthCompare = GPUCompareFunction.Less,
+                    format = GPUTextureFormat.Depth24Plus
                 ),
-                multisample = RenderPipelineDescriptor.MultisampleState(
+                multisample = MultisampleState(
                     count = 1u,
                     mask = 0xFFFFFFFu
                 )
@@ -108,9 +109,9 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
 
         val depthTexture = device.createTexture(
             TextureDescriptor(
-                size = Size3D(renderingContext.width, renderingContext.height),
-                format = TextureFormat.Depth24Plus,
-                usage = setOf(TextureUsage.RenderAttachment),
+                size = Extent3D(renderingContext.width, renderingContext.height),
+                format = GPUTextureFormat.Depth24Plus,
+                usage = setOf(GPUTextureUsage.RenderAttachment),
             )
         ).bind()
 
@@ -118,7 +119,7 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
         uniformBuffer = device.createBuffer(
             BufferDescriptor(
                 size = uniformBufferSize,
-                usage = setOf(BufferUsage.Uniform, BufferUsage.CopyDst)
+                usage = setOf(GPUBufferUsage.Uniform, GPUBufferUsage.CopyDst)
             )
         ).bind()
 
@@ -126,9 +127,9 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
             BindGroupDescriptor(
                 layout = renderPipeline.getBindGroupLayout(0u),
                 entries = listOf(
-                    BindGroupDescriptor.BindGroupEntry(
+                    BindGroupEntry(
                         binding = 0u,
-                        resource = BindGroupDescriptor.BufferBinding(
+                        resource = BufferBinding(
                             buffer = uniformBuffer
                         )
                     )
@@ -138,18 +139,18 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
 
         renderPassDescriptor = RenderPassDescriptor(
             colorAttachments = listOf(
-                RenderPassDescriptor.ColorAttachment(
+                RenderPassColorAttachment(
                     view = dummyTexture.createView().bind(), // Assigned later
-                    loadOp = LoadOp.Clear,
+                    loadOp = GPULoadOp.Clear,
                     clearValue = Color(0.5, 0.5, 0.5, 1.0),
-                    storeOp = StoreOp.Store,
+                    storeOp = GPUStoreOp.Store,
                 )
             ),
-            depthStencilAttachment = RenderPassDescriptor.DepthStencilAttachment(
+            depthStencilAttachment = RenderPassDepthStencilAttachment(
                 view = depthTexture.createView(),
                 depthClearValue = 1.0f,
-                depthLoadOp = LoadOp.Clear,
-                depthStoreOp = StoreOp.Store
+                depthLoadOp = GPULoadOp.Clear,
+                depthStoreOp = GPUStoreOp.Store
             )
         )
 
@@ -160,7 +161,6 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
     }
 
     fun AutoClosableContext.render() {
-
         val transformationMatrix = getTransformationMatrix(
             frame / 100.0,
             projectionMatrix
@@ -175,7 +175,7 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
 
         renderPassDescriptor = renderPassDescriptor.copy(
             colorAttachments = listOf(
-                renderPassDescriptor.colorAttachments[0].copy(
+                (renderPassDescriptor.colorAttachments[0] as RenderPassColorAttachment).copy(
                     view = renderingContext.getCurrentTexture()
                         .createView()
                         .bind()
@@ -198,7 +198,6 @@ class RotatingCubeScene(private val context: WGPUContext) : AutoCloseable {
             .bind()
 
         device.queue.submit(listOf(commandBuffer))
-
     }
 
 
